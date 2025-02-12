@@ -19,7 +19,7 @@ public class AuctionData {
     public static int timeRemaining = 0;
     public static String higherBidCPF = "nobody";
     
-    public static int multicastPort = 4446;
+    public static int multicastPort = 5000;
     public static String multicastAddress = "230.0.0.0";
     public static MulticastSocket multicastSocket;
     

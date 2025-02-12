@@ -128,7 +128,7 @@ public class LoginPanel extends javax.swing.JPanel {
             System.out.println("---------------------------------------------");
    
             //Chama função que retorna um json com os dados do multicast
-            String resposta = UnicastClient.conectaServerUnicast(cpf, textoEnvio, assinatura, "localhost", 5000);
+            String resposta = UnicastClient.conectaServerUnicast(cpf, textoEnvio, assinatura, "192.168.0.186", 12345);
             
             //Transforma em json os dados retornados da função
             JSONObject jsonDados = new JSONObject(resposta);
@@ -147,13 +147,6 @@ public class LoginPanel extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(null, "Resposta do servidor: " + resposta, "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                 // Transição para a próxima tela se a resposta for válida
                 if (jsonDados.has("Endereço") && jsonDados.has("Porta")) {
-        
-                    // Criando o cliente multicast
-                    multicastClient = new MulticastClient(AuctionData.multicastAddress, AuctionData.multicastPort);
-        
-                    // Garante que o cliente entrou no grupo
-                    if (multicastClient.joinGroup()) { 
-                        System.out.println("Multicast criado e conectado com sucesso!");
 
                         // Fecha a janela atual
                         frame.dispose(); 
@@ -168,7 +161,7 @@ public class LoginPanel extends javax.swing.JPanel {
         } else {
             JOptionPane.showMessageDialog(null, "Erro ao entrar no grupo multicast.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
-    }
+//    }
 
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Erro ao enviar solicitação: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);

@@ -4,6 +4,8 @@ package views;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
+import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,9 +29,19 @@ public class LeilaoView extends javax.swing.JPanel {
     private Thread timerThread;
     private MulticastHandler multicastHandler;
     
-    public LeilaoView(JFrame frame) {
+    public LeilaoView(JFrame frame) throws IOException {
         initComponents();
+        conectaMulticast();
         startReceivingMessages();
+    }
+    
+    
+    private void conectaMulticast() throws UnknownHostException, IOException{
+        
+        InetAddress multicastGtoup = InetAddress.getByName(AuctionData.multicastAddress);
+        AuctionData.multicastSocket = new MulticastSocket(AuctionData.multicastPort);
+        AuctionData.multicastSocket.joinGroup(multicastGtoup);
+        System.out.println("Conectado ao grupo multicast");
     }
     
 /**
@@ -50,7 +62,7 @@ public class LeilaoView extends javax.swing.JPanel {
                 System.out.println("Aguardando mensagens do multicast...");
 
                 // Recebe o pacote através do socket multicast.
-                MulticastHandler.socket.receive(packet);
+                AuctionData.multicastSocket.receive(packet);
                 System.out.println("Mensagem recebida");
                     
                 // Converte os dados do pacote para uma String, considerando o tamanho real da mensagem.
@@ -60,14 +72,14 @@ public class LeilaoView extends javax.swing.JPanel {
                 IvParameterSpec iv = AESMethods.geraIvUsandoChaveAES(KeyLogger.ServerSimetricKey);
                     
                 // Decifra a mensagem recebida utilizando AES com a chave simétrica e o IV gerado.
-                String receivedMessage = AESMethods.decifraComAES(msgRecebidaCifrada, KeyLogger.ServerSimetricKey, iv);
+                String msgRecebida = AESMethods.decifraComAES(msgRecebidaCifrada, KeyLogger.ServerSimetricKey, iv);
 
                 // Converte a mensagem decifrada para um objeto JSON para facilitar o processamento.
-                JSONObject receivedJson = new JSONObject(receivedMessage);
+                JSONObject jsonRecebido = new JSONObject(msgRecebida);
 
                 // Extrai informações do JSON: identificador do remetente e a ação solicitada.
-                String remetente = receivedJson.getString("sender");
-                String acaoDoUser = receivedJson.getString("action");
+                String remetente = jsonRecebido.getString("sender");
+                String acaoDoUser = jsonRecebido.getString("action");
                 System.out.println("ACAO DO PAYLOAD RECEBIDO: " + acaoDoUser);
 
                 // Verifica se o remetente é o "client" (caso a mensagem seja originada de um cliente)
@@ -120,7 +132,7 @@ public class LeilaoView extends javax.swing.JPanel {
                                 DatagramPacket packet2 = new DatagramPacket(buffer2, buffer2.length, group, AuctionData.multicastPort);
 
                                 // Envia o pacote multicast.
-                                MulticastHandler.socket.send(packet2);
+                                AuctionData.multicastSocket.send(packet2);
                                 System.out.println("Mensagem enviada!");                          
                             }
 
@@ -132,13 +144,13 @@ public class LeilaoView extends javax.swing.JPanel {
                             JSONObject jsonResposta = new JSONObject();
 
                             // Obtém o novo valor do lance a partir do JSON recebido.
-                            float novoPreco = receivedJson.getFloat("value");
+                            float novoPreco = jsonRecebido.getFloat("value");
 
                             // Se o novo lance for maior que o lance atual, atualiza os dados.
                             if (novoPreco > preco) {
-                                preco = receivedJson.getFloat("value");
+                                preco = jsonRecebido.getFloat("value");
                                 ValorLance.setText(String.valueOf(preco));
-                                String CPF = receivedJson.getString("CPF");
+                                String CPF = jsonRecebido.getString("CPF");
                                 DonoLance.setText(CPF);
 
                                 // Obtém novamente os dados do item da interface.
@@ -172,7 +184,7 @@ public class LeilaoView extends javax.swing.JPanel {
 
                                 byte[] buffer2 = encodedMessage.getBytes();
                                 DatagramPacket packet2 = new DatagramPacket(buffer2, buffer2.length, group, AuctionData.multicastPort);
-                                MulticastHandler.socket.send(packet2); 
+                                AuctionData.multicastSocket.send(packet2); 
                                 System.out.println("Mensagem enviada! ");
                                 
                                 // Inicia um timer ou outra ação relacionada à atualização dos dados do lance.
@@ -385,7 +397,7 @@ public class LeilaoView extends javax.swing.JPanel {
 
         byte[] buffer = encodedMessage.getBytes();
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, AuctionData.multicastPort);
-        MulticastHandler.socket.send(packet);
+        AuctionData.multicastSocket.send(packet);
         System.out.println("Mensagem enviada! ");
         timer(dados);
         
@@ -462,7 +474,7 @@ public class LeilaoView extends javax.swing.JPanel {
 
                     byte[] buffer = encodedMessage.getBytes();
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, AuctionData.multicastPort);
-                    MulticastHandler.socket.send(packet);
+                    AuctionData.multicastSocket.send(packet);
                     System.out.println("Mensagem enviada! ");
                     
                     //Reseta os dados do painel do leilao
@@ -504,7 +516,7 @@ public class LeilaoView extends javax.swing.JPanel {
 
                     byte[] buffer3 = encodedMessage2.getBytes();
                     DatagramPacket packet3 = new DatagramPacket(buffer3, buffer3.length, group2, AuctionData.multicastPort);
-                    MulticastHandler.socket.send(packet3); // Sends the message
+                    AuctionData.multicastSocket.send(packet3); // Sends the message
                     System.out.println("Mensagem enviada! ");
                     
                 }else{
@@ -549,7 +561,7 @@ public class LeilaoView extends javax.swing.JPanel {
 
                     byte[] buffer3 = encodedMessage2.getBytes();
                     DatagramPacket packet3 = new DatagramPacket(buffer3, buffer3.length, group2, AuctionData.multicastPort);
-                    MulticastHandler.socket.send(packet3); // Sends the message
+                    AuctionData.multicastSocket.send(packet3); // Sends the message
                     System.out.println("Mensagem enviada! ");
                 }
             } catch (InterruptedException e) {

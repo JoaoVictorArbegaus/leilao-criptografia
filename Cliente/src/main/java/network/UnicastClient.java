@@ -48,11 +48,11 @@ public class UnicastClient {
             
             // Criando o objeto JSON com as informações do cliente (CPF, texto e assinatura digital).
             System.out.println("Criando JSON");
-            JSONObject jsonRequest = new JSONObject();
-            jsonRequest.put("CPF", CPF);
-            jsonRequest.put("text", textoEnvio);
-            jsonRequest.put("signature", assinatura);
-            String json = jsonRequest.toString();
+            JSONObject jsonR = new JSONObject();
+            jsonR.put("CPF", CPF);
+            jsonR.put("text", textoEnvio);
+            jsonR.put("signature", assinatura);
+            String json = jsonR.toString();
 
             // Enviando a requisição ao servidor via unicast.
             System.out.println("Enviando payload para o server...");
@@ -61,41 +61,41 @@ public class UnicastClient {
             System.out.println("-------------------------------------------");
 
             // Lendo a resposta do servidor.
-            String responseJson = in.readLine();
+            String jsonRespostaSTR = in.readLine();
             System.out.println("Resposta recebida do server!");
             
             // Processando a resposta JSON recebida.
-            JSONObject jsonRequest2 = new JSONObject(responseJson);
+            JSONObject jsonR2 = new JSONObject(jsonRespostaSTR);
             System.out.println("Json recebido!");
             
             // Extraindo os dados cifrados e suas respectivas assinaturas.
-            String ednCifrado = jsonRequest2.getString("Endereço");
-            String portaCifrada = jsonRequest2.getString("Porta");
-            String chaveCifrada = jsonRequest2.getString("Chave Simetrica Cifrada");
+            String ednCifrado = jsonR2.getString("Endereço");
+            String portaCifrada = jsonR2.getString("Porta");
+            String chaveCifrada = jsonR2.getString("Chave Simetrica Cifrada");
             
-            String ednCifradoAss = jsonRequest2.getString("EndereçoAss");
-            String portaCifradaAss = jsonRequest2.getString("PortaAss");
-            String chaveCifradaAss = jsonRequest2.getString("Chave Simetrica CifradaAss");            
+            String ednCifradoAss = jsonR2.getString("EndereçoAss");
+            String portaCifradaAss = jsonR2.getString("PortaAss");
+            String chaveCifradaAss = jsonR2.getString("Chave Simetrica CifradaAss");            
             
             // Exibindo o JSON recebido para debug.
-            String jsonString2 = jsonRequest2.toString();
+            String jsonRespostaSTR2 = jsonR2.toString();
             System.out.println("");
-            System.out.println("Json que chegou no cliente: "+jsonString2);
+            System.out.println("Json que chegou no cliente: "+jsonRespostaSTR2);
             System.out.println("");
 
             // Verificando a assinatura digital do servidor para garantir a autenticidade dos dados recebidos.
             System.out.println("Verificando a assinatura do server...");
-            boolean authentication = RSAMethods.verificaAssinatura(ednCifrado, ednCifradoAss, KeyLogger.ServerPublicKey);
-            System.out.println("A assinatura do endereço eh: "+authentication);
+            boolean autenticacao = RSAMethods.verificaAssinatura(ednCifrado, ednCifradoAss, KeyLogger.ServerPublicKey);
+            System.out.println("A assinatura do endereço eh: "+autenticacao);
             
-            boolean authentication2 = RSAMethods.verificaAssinatura(portaCifrada, portaCifradaAss, KeyLogger.ServerPublicKey);
-            System.out.println("A assinatura da porta eh: "+authentication2);
+            boolean autenticacao2 = RSAMethods.verificaAssinatura(portaCifrada, portaCifradaAss, KeyLogger.ServerPublicKey);
+            System.out.println("A assinatura da porta eh: "+autenticacao2);
             
-            boolean authentication3 = RSAMethods.verificaAssinatura(chaveCifrada, chaveCifradaAss, KeyLogger.ServerPublicKey);
-            System.out.println("A assinatura da chave eh: "+authentication3);
+            boolean autenticacao3 = RSAMethods.verificaAssinatura(chaveCifrada, chaveCifradaAss, KeyLogger.ServerPublicKey);
+            System.out.println("A assinatura da chave eh: "+autenticacao3);
             
             // Se todas as assinaturas forem válidas, os dados podem ser decifrados.
-            if(authentication && authentication2 && authentication3) {
+            if(autenticacao && autenticacao2 && autenticacao3) {
                 System.out.println("Decifrando...");
 
                 // Obtendo a chave privada do cliente a partir do CPF.

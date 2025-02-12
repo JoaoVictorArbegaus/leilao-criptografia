@@ -34,14 +34,29 @@ public class LeilaoCliente extends javax.swing.JPanel {
 
      public LeilaoCliente(JFrame frame, String cpf) throws JSONException, NoSuchAlgorithmException {
         this.cpf = cpf;
+        AuctionData.multicastSocket = conectarMulticastGroup();
         initComponents();
         cliente.setText(cpf);
         //Ao iniciar o painel ele começa a escutar
-        iniciarEscutaMensagens();
+        iniciarEscutaMensagens(AuctionData.multicastSocket);
         SolicitaDados();
     }
+     
+     public static MulticastSocket conectarMulticastGroup() {
+        try {
+            InetAddress multicastGroup = InetAddress.getByName(AuctionData.multicastAddress);
+            MulticastSocket multicastSocket = new MulticastSocket(AuctionData.multicastPort);
+            multicastSocket.joinGroup(multicastGroup);
+            System.out.println("Conectado ao grupo multicast: " + AuctionData.multicastAddress + AuctionData.multicastPort);
+            return multicastSocket;
+        } catch (Exception e) {
+            System.out.println(e);
+        }
 
-    private void iniciarEscutaMensagens() {
+        return null;
+    }
+
+    private void iniciarEscutaMensagens(MulticastSocket multicastSocket) {
         //Separado em Thread para n dar conflito
         Thread receiverThread = new Thread(() -> {
             try {
@@ -51,7 +66,7 @@ public class LeilaoCliente extends javax.swing.JPanel {
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     System.out.println("Aguardando mensagens do multicast...");
                     //Recebe o pacote vindo do multicast
-                    MulticastClient.socket.receive(packet); 
+                    multicastSocket.receive(packet);
                     System.out.println("Mensagem recebida");
                     
                     //Decifra a mensagem
@@ -126,7 +141,7 @@ public class LeilaoCliente extends javax.swing.JPanel {
                 byte[] buffer = msgCifrada.getBytes();
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, AuctionData.multicastPort);
                 //Envia a solicitação
-                MulticastClient.socket.send(packet);
+                AuctionData.multicastSocket.send(packet);
                 System.out.println("enviou solicitação de entrada: " + msg);
                 
             } catch (IOException e) {
@@ -324,7 +339,7 @@ public class LeilaoCliente extends javax.swing.JPanel {
                         DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, AuctionData.multicastPort);
                         
                         //Envia os dados do lance
-                        MulticastClient.socket.send(packet);
+                        AuctionData.multicastSocket.send(packet);
                         System.out.println("Lance enviado ao multicast: " + msg);
                     }
                 

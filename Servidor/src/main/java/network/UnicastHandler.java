@@ -69,7 +69,7 @@ public class UnicastHandler implements Runnable {
                 System.out.println("Cifrando e assinando os dados...");
                 System.out.println("");
                 
-                //Cifrando os dados a serem enviados
+                //Cifrando os dados a serem enviados com a chave simetrica e cifrando a chave cimetrica com a chave publica do cliente
                 String chaveSimetricaCifrada = RSAMethods.cifrarComRSA(KeyLogger.ServerSimetricKeySTR, chavePublicaClient);
                 IvParameterSpec iv = AESMethods.geraIvUsandoChaveAES(KeyLogger.ServerSimetricKey);
                 String enderecoCifrado = AESMethods.cifraComAES(AuctionData.multicastAddress, KeyLogger.ServerSimetricKey, iv);
